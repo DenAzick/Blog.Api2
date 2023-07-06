@@ -26,26 +26,42 @@ public class AccountController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] CreateUserModel model)
     {
-        if (!ModelState.IsValid)
+        try
         {
-            return BadRequest(ModelState);
-        }
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
-        var user = await _userManager.Register(model);
-        return Ok(new UserModel(user));
+            var user = await _userManager.Register(model);
+            return Ok(new UserModel(user));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while registering the user.");
+        }
     }
 
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginUserModel model)
     {
-        if (!ModelState.IsValid)
+        try
         {
-            return BadRequest(ModelState);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var token = await _userManager.Login(model);
+
+            return Ok(new { Token = token });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while logining the user.");
         }
 
-        var token = await _userManager.Login(model);
-
-        return Ok(new { Token = token });
+        
     }
 
 
@@ -53,25 +69,41 @@ public class AccountController : ControllerBase
     [Authorize]
     public async Task<IActionResult> Profile()
     {
-        var userId = _userProvider.UserId;
-
-        var user = await _userManager.GetUser(userId);
-        if (user == null)
+        try
         {
-            return Unauthorized();
-        }
-        return Ok(new UserModel(user));
+            var userId = _userProvider.UserId;
 
+            var user = await _userManager.GetUser(userId);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+            return Ok(new UserModel(user));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while retrieving the user profile.");
+        }
     }
+
+
     [HttpPost("GetUser")]
     public async Task<IActionResult> GetUser(string userName)
     {
-        var user = await _userManager.GetUser(userName);
-        if (user == null)
+        try
         {
-            return NotFound();
-        }
+            var user = await _userManager.GetUser(userName);
+            if (user == null)
+            {
+                return NotFound();
+            }
 
-        return Ok(new UserModel(user));
+            return Ok(new UserModel(user));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while retrieving the user.");
+        }
     }
+
 }

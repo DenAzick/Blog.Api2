@@ -45,10 +45,8 @@ public static  class ServiceCollectionExtensions
 
     public static void MigrateBlogDb (this WebApplication app)
     {
-        if (app.Services.GetService<AppDbContext>() != null)
-        {
-            var identityDb = app.Services.GetRequiredService<AppDbContext>();
+        var identityDb = app.Services.GetService<AppDbContext>();
+        if (identityDb != null)
             identityDb.Database.Migrate();
-        }
     }
 }

@@ -24,51 +24,79 @@ public class UserManager
 
     public async Task<User> Register(CreateUserModel model)
     {
-        if (await _context.Users.AnyAsync(u => u.Username == model.Username))
+        try
         {
-            throw new Exception("Username already exists");
+            if (await _context.Users.AnyAsync(u => u.Username == model.Username))
+            {
+                throw new Exception("Username already exists");
+            }
+
+            var user = new User()
+            {
+                Name = model.Name,
+                Username = model.Username
+            };
+
+            user.Password = new PasswordHasher<User>().HashPassword(user, model.Password);
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+
+            return user;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception("An error occurred while registering the user.", ex);
         }
 
-        var user = new User()
-        {
-            Name = model.Name,
-            Username = model.Username
-        };
 
-        user.Password = new PasswordHasher<User>().HashPassword(user, model.Password);
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
-
-        return user;
     }
 
     public async Task<string> Login(LoginUserModel model)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == model.Username);
-        if (user == null)
+        try
         {
-            throw new Exception("Username or Password is incorrect");
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == model.Username);
+            if (user == null)
+            {
+                throw new Exception("Username or Password is incorrect");
+            }
+
+            var result = new PasswordHasher<User>().VerifyHashedPassword(user, user.Password, model.Password);
+
+            if (result == PasswordVerificationResult.Failed)
+            {
+                throw new Exception("Username or Password is incorrect");
+            }
+
+            var token = _jwtTokenManager.GenerateToken(user);
+
+            return token;
         }
-
-        var result = new PasswordHasher<User>().VerifyHashedPassword(user, user.Password, model.Password);
-
-        if (result == PasswordVerificationResult.Failed)
+        catch (Exception ex)
         {
-            throw new Exception("Username or Password is incorrect");
+            throw new Exception("An error occurred while logging in.", ex);
         }
-
-        var token = _jwtTokenManager.GenerateToken(user);
-
-        return token;
     }
 
     public async Task<User?> GetUser(string username)
     {
-        return await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+        var result = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+        if (result == null)
+        {
+            throw new Exception("User not found");
+        }
+
+        return result;
     }
     public async Task<User?> GetUser(Guid id)
     {
-        return await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+        var result = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+        if (result == null)
+        {
+            throw new Exception("User not found");
+        }
+
+        return result;
     }
 
 }
