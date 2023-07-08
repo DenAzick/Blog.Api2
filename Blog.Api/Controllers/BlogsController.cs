@@ -52,7 +52,7 @@ public class BlogsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateBlog(CreateBlogModel model)
+    public async Task<IActionResult> CreateBlog([FromForm] CreateBlogModel model)
     {
         try
         {
@@ -68,15 +68,10 @@ public class BlogsController : ControllerBase
     [HttpPut]
     public async Task<IActionResult> UpdateBlog(Guid blogId, CreateBlogModel model)
     {
-        try
-        {
-            var result = await _blogManager.UpdateBlog(blogId, model);
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while updating the blog.");
-        }
+
+        var result = await _blogManager.UpdateBlog(blogId, model);
+        return Ok(result);
+
     }
 
     [HttpDelete]

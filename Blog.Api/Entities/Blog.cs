@@ -7,6 +7,7 @@ namespace Blog.Api.Entities
         public Guid Id { get; set; } = new Guid();
         public required string Name { get; set; }
         public string? Description { get; set; }
+        public string? PhotoPath { get; set; }
         public DateTime? CreatedDate { get; set; } = DateTime.Now;
 
         public Guid UserId { get; set; }

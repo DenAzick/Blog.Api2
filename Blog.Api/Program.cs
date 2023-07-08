@@ -2,6 +2,7 @@ using Blog.Api.Context;
 using Blog.Api.Extensions;
 using Blog.Api.Managers.BlogManager;
 using Blog.Api.Managers.BlogManagers;
+using Blog.Api.Managers.FileManager;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
@@ -47,12 +48,14 @@ builder.Services.AddIdentity(builder.Configuration);
 builder.Services.AddScoped<BlogManager>();
 builder.Services.AddScoped<PostManager>();
 
+builder.Services.AddScoped<IFileManager, FileManager>();
+
 var app = builder.Build();
 
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.MigrateBlogDb();
+//app.MigrateBlogDb();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 

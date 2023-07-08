@@ -1,18 +1,24 @@
 ﻿using Blog.Api.Context;
 using Blog.Api.Entities;
+using Blog.Api.Managers.FileManager;
 using Blog.Api.Models.BlogModels;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 
 namespace Blog.Api.Managers.BlogManager;
 
 public class BlogManager
 {
     private readonly AppDbContext _dbContext;
+    private readonly IFileManager _fileManager;
+    private const string PostImagesFolderName = "PostImages";
 
-    public BlogManager(AppDbContext dbContext)
+    public BlogManager(AppDbContext dbContext, IFileManager fileManager)
     {
         _dbContext = dbContext;
+        _fileManager = fileManager;
     }
 
     public async Task<List<BlogModel>> GetBlogs()
@@ -51,7 +57,7 @@ public class BlogManager
 
         return ParseList(blogs);
     }
-    public async Task<BlogModel> CreateBlog(CreateBlogModel model)
+    public async Task<BlogModel> CreateBlog(CreateBlogModel model)  
     {
         var blog = new Entities.Blog()
         {
@@ -59,6 +65,10 @@ public class BlogManager
             Description = model.Description,
             UserId = model.UserId
         };
+
+        if (model.Media is not null)
+            blog.PhotoPath = await _fileManager.SaveFileToWwwrootAsync(model.Media, PostImagesFolderName);
+
         _dbContext.Blogs.Add(blog);
         await _dbContext.SaveChangesAsync();
         return ParseToBlogModel(blog);
@@ -70,6 +80,10 @@ public class BlogManager
 
         blog.Name = model.Name;
         blog.Description = model.Description;
+
+        if (model.Media is not null)
+            blog.PhotoPath = await _fileManager.SaveFileToWwwrootAsync(model.Media, PostImagesFolderName);
+
         await _dbContext.SaveChangesAsync();
         return ParseToBlogModel(blog);
     }
@@ -94,6 +108,7 @@ public class BlogManager
         {
             Id = blog.Id,
             Name = blog.Name,
+            PhotoPath = blog.PhotoPath,
             Description = blog.Description,
             CreatedDate = (DateTime)blog.CreatedDate,
             UserId = blog.UserId,
@@ -124,5 +139,8 @@ public class BlogManager
         return blogModels;
     }
 
-    
+  
+
+
+
 }
